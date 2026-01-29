@@ -1,0 +1,8 @@
+{
+    "title": "常用汉字500练习",
+    "words": ["的", "一", "是", "了", "我", "不", "在", "人", "们", "有"],
+    "wordsPerGroup": 10,
+    "settings": {
+        "difficulty": "beginner"
+    }
+}
