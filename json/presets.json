@@ -1,0 +1,17 @@
+[
+    {
+        "name": "常用汉字500",
+        "file": "top0-500.json",
+        "description": "最常用的500个汉字练习"
+    },
+    {
+        "name": "成语练习",
+        "file": "idioms.json",
+        "description": "常用成语打字练习"
+    },
+    {
+        "name": "英文单词",
+        "file": "english-words.json",
+        "description": "常用英文单词练习"
+    }
+]
