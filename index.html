@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动循环打字练习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin: 20px;
+            position: relative;
+
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .settings-btn:hover {
+            background-color: #2980b9;
+            /* transform: rotate(30deg); */
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        .form-hint {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #ecf0f1;
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .exercise-area {
+            margin-bottom: 30px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: left;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            min-height: 120px;
+        }
+
+        .word-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 新增：得分显示样式 */
+        .word-score {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+            font-weight: 500;
+            min-height: 14px;
+        }
+
+        .word-text {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .word-input {
+            font-size: 1.3rem;
+            padding: 10px;
+            text-align: center;
+            /* 默认居中 */
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: all 0.3s ease;
+            min-width: 60px;
+            max-width: 300px;
+            width: auto;
+            background-color: white;
+            /* 添加文本对齐方式 */
+            text-align-last: center;
+            overflow: hidden;
+        }
+
+        /* 添加一个特殊类用于左对齐 */
+        .word-input.left-align {
+            text-align: left;
+            text-align-last: left;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .word-input.pending {
+            border-color: #ddd;
+            background-color: white;
+        }
+
+        .word-input.current {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .word-input.correct {
+            border-color: #3ce76a;
+            color: #0c0c0c;
+        }
+
+        .word-input.incorrect {
+            border-color: #e74c3c;
+            background-color: #ffeaea;
+            color: #b0b0b0;
+        }
+
+        .word-input:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            z-index: 2;
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        #reset-btn {
+            background-color: #ecf0f1;
+            color: #333;
+        }
+
+        #reset-btn:hover {
+            background-color: #d5dbdb;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .words-container {
+                gap: 10px;
+            }
+
+            .word-input {
+                font-size: 1.1rem;
+                padding: 8px;
+                min-width: 50px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .settings-btn {
+                top: 15px;
+                right: 15px;
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            /* 移动端调整得分显示 */
+            .word-score {
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 设置按钮 -->
+        <button class="settings-btn" id="settings-btn">
+            ⚙️
+        </button>
+
+        <header>
+            <h1>自动循环打字练习</h1>
+            <p class="subtitle">每个字词对应一个输入框，自动循环练习，输入正确后自动跳转</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="completed">0/10</div>
+                <div class="stat-label">当前目标进度</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="group-count">1</div>
+                <div class="stat-label">当前目标</div>
+            </div>
+        </div>
+
+        <div class="exercise-area">
+            <div class="words-container" id="words-container">
+                <!-- 动态生成的字词和输入框将显示在这里 -->
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="reset-btn">重置进度</button>
+        </div>
+
+        <div class="footer">
+            <p>打字练习工具 | 自动循环练习 | 输入正确后自动跳转到下一个</p>
+            <p>在至少有2个字词情况下，输入3个美元符号加空格可以删除当前字词($$$_)</p>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">打字练习设置</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="preset-select">常用练习集（非必选）</label>
+                    <select id="preset-select" class="form-control">
+                        <option value="">选择预设练习集...（非必选）</option>
+                        <!-- 动态加载的选项将在这里 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exercise-title">练习标题</label>
+                    <input type="text" id="exercise-title" class="form-control" placeholder="请输入练习标题">
+                </div>
+                <div class="form-group">
+                    <label for="word-bank">字词库 (每行一个字或词)</label>
+                    <textarea id="word-bank" class="form-control" placeholder="请输入字词，每行一个"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="words-per-group">每组字词数量</label>
+                    <input type="number" id="words-per-group" class="form-control" min="5" max="20" value="10">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-btn">取消</button>
+                <button class="btn-primary" id="save-btn">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 字词库 - 可以扩展
+        const wordBank = [];
+        const insertList = [];
+
+        const baseTarget = 2;
+        // 一次错误惩罚多少分
+        const penalty = 5;
+
+        //错误需要惩罚多少次联系
+        const pealtyRepeat = 5
+
+        let scoreMap = new Map();
+
+        let currentTarget = 1 * baseTarget;
+
+        let errorSet = new Set();
+
+        let inError = false
+
+        let lastIsInError = false
+
+
+
+        // 练习配置
+        let exerciseConfig = {
+            title: "自动循环打字练习",
+            wordsPerGroup: 10
+        };
+
+        // 状态变量
+        let currentExercise = [];
+        let currentIndex = 0;
+        let isActive = false;
+        let completedCount = 0;
+        let groupCount = 1;
+        let errorCount = 0;
+        let isComposition = false;
+        let hasErrorInCurrentInput = false; // 当前输入是否已经错误
+
+        // DOM元素
+        const wordsContainerEl = document.getElementById('words-container');
+        const resetBtn = document.getElementById('reset-btn');
+        const completedEl = document.getElementById('completed');
+        const groupCountEl = document.getElementById('group-count');
+        // const errorCountEl = document.getElementById('error-count');
+        const settingsBtn = document.getElementById('settings-btn');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const closeModalBtn = document.getElementById('close-modal');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const presetSelectEl = document.getElementById('preset-select');
+        const exerciseTitleInput = document.getElementById('exercise-title');
+        const wordBankInput = document.getElementById('word-bank');
+        const wordsPerGroupInput = document.getElementById('words-per-group');
+        const titleElement = document.querySelector('h1');
+
+        // 初始化
+        function init() {
+            loadFromLoacl()
+            startNewExercise();
+
+
+            // 更新标题
+            titleElement.textContent = exerciseConfig.title;
+
+            // 事件监听
+            resetBtn.addEventListener('click', resetCurrentGroup);
+
+            // 设置弹窗事件监听
+            settingsBtn.addEventListener('click', openSettingsModal);
+            closeModalBtn.addEventListener('click', closeSettingsModal);
+            cancelBtn.addEventListener('click', closeSettingsModal);
+            saveBtn.addEventListener('click', saveSettings);
+
+            // 点击模态框外部关闭
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    closeSettingsModal();
+                }
+            });
+
+            // ESC键关闭模态框
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                    closeSettingsModal();
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                saveConfig()
+            });
+        }
+
+        // 打开设置弹窗
+        function openSettingsModal() {
+            // 填充当前设置
+            exerciseTitleInput.value = exerciseConfig.title;
+            wordBankInput.value = wordBank.join('\n');
+            wordsPerGroupInput.value = exerciseConfig.wordsPerGroup;
+
+            // 加载预设列表
+            loadPresets();
+
+            // 显示弹窗
+            modalOverlay.classList.add('active');
+
+            // 防止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭设置弹窗
+        function closeSettingsModal() {
+            modalOverlay.classList.remove('active');
+
+            // 恢复背景滚动
+            document.body.style.overflow = '';
+
+            // 重置预设选择器
+            if (presetSelectEl) {
+                presetSelectEl.value = '';
+            }
+        }
+
+        // 保存设置
+        function saveSettings() {
+            // 获取新标题
+            const newTitle = exerciseTitleInput.value.trim();
+            if (newTitle) {
+                exerciseConfig.title = newTitle;
+                titleElement.textContent = newTitle;
+            }
+
+            // 获取新字词库
+            const newWordBankText = wordBankInput.value.trim();
+            if (newWordBankText) {
+                const newWordBank = newWordBankText.split('\n')
+                    .map(word => word.trim())
+                    .filter(word => word.length > 0);
+
+                if (newWordBank.length > 0) {
+                    setWordBank(newWordBank);
+                }
+            }
+
+            // 获取每组字词数量
+            const newWordsPerGroup = parseInt(wordsPerGroupInput.value);
+            if (newWordsPerGroup >= 5 && newWordsPerGroup <= 20) {
+                exerciseConfig.wordsPerGroup = newWordsPerGroup;
+            }
+
+            // 重置预设选择
+            if (presetSelectEl) {
+                presetSelectEl.value = '';
+            }
+
+            // 重新开始练习
+            resetCurrentGroup();
+            startNewExercise();
+
+            // 关闭弹窗
+            closeSettingsModal();
+        }
+
+        async function loadPresets() {
+            try {
+                // 清空现有选项（除了第一个提示选项）
+                while (presetSelectEl.options.length > 1) {
+                    presetSelectEl.remove(1);
+                }
+
+                // 重置为默认选项
+                presetSelectEl.value = '';
+
+                // 添加一个加载中的选项
+                const loadingOption = document.createElement('option');
+                loadingOption.value = '';
+                loadingOption.disabled = true;
+                loadingOption.textContent = '加载预设列表中...';
+                presetSelectEl.appendChild(loadingOption);
+
+                // 尝试从json目录加载预设列表
+                const response = await fetch('./json/presets.json');
+                if (!response.ok) {
+                    throw new Error('无法加载预设列表');
+                }
+
+                const presets = await response.json();
+
+                // 移除加载中的选项
+                presetSelectEl.removeChild(loadingOption);
+
+                // 添加预设选项
+                presets.forEach(preset => {
+                    const option = document.createElement('option');
+                    option.value = preset.file;
+                    option.textContent = preset.name;
+                    if (preset.description) {
+                        option.title = preset.description;
+                    }
+                    presetSelectEl.appendChild(option);
+                });
+
+                // 移除可能已存在的事件监听器，然后重新添加
+                const newSelectEl = presetSelectEl.cloneNode(true);
+                presetSelectEl.parentNode.replaceChild(newSelectEl, presetSelectEl);
+                presetSelectEl = newSelectEl; // 更新引用
+
+                // 添加选择事件监听
+                presetSelectEl.addEventListener('change', async function () {
+                    if (this.value) {
+                        await loadPresetData(this.value);
+                    }
+                });
+
+            } catch (error) {
+                console.warn('无法加载预设练习集:', error);
+
+                // 移除加载中的选项（如果存在）
+                if (presetSelectEl.options.length > 1 && presetSelectEl.options[1].textContent === '加载预设列表中...') {
+                    presetSelectEl.removeChild(presetSelectEl.options[1]);
+                }
+
+                // 添加一个禁用选项提示用户
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = '无法加载预设练习集';
+                presetSelectEl.appendChild(option);
+            }
+        }
+
+        async function loadPresetData(filename) {
+            try {
+                const response = await fetch(`./json/${filename}`);
+                if (!response.ok) {
+                    throw new Error('无法加载预设数据');
+                }
+
+                const presetData = await response.json();
+
+                // 更新界面
+                if (presetData.title) {
+                    exerciseTitleInput.value = presetData.title;
+                }
+
+                if (presetData.words && Array.isArray(presetData.words)) {
+                    wordBankInput.value = presetData.words.join('\n');
+                }
+
+                if (presetData.wordsPerGroup) {
+                    wordsPerGroupInput.value = presetData.wordsPerGroup;
+                }
+
+            } catch (error) {
+                console.error('加载预设数据失败:', error);
+                alert('加载预设练习集失败，请检查文件是否存在');
+            }
+        }
+
+        function loadFromLoacl() {
+            const saved = loadConfig()
+            scoreMap = saved ? saved.scoreMap : new Map();
+            currentTarget = saved ? saved.currentTarget : 5;
+            errorSet = saved ? saved.errorSet : new Set();
+            console.log("loadFromLoacl scoreMap size " + scoreMap.size)
+            if (scoreMap.size == 0) {
+                let str = "的一是了不在有个人这上中大为来我到出要以时和地们得可下对生也子就过能他会多发说而于自之用年行家方后作成开面事好小心前所道法如进着同经分定都然与本还其当起动已两点从问里主实天高去现长此三将无国全文理明日些看只公等十意正外想间把情者没重相那向知因样学应又手但信关使种见力名二处门并口么先位头回话很再由身入内第平被给次别几月真立新通少机打水果最部何安接报声才体今合性西你放表目加常做己老四件解路更走比总金管光工结提任东原便美及教难世至气神山数利书代直色场变记张必受交非服化求风度太万各算边王什快许连五活思该步海指物则女或完马强言条特命感清带认保望转传儿制干计民白住字它义车像反象题却流且即深近形取往系量论告息让决未花收满每华业南觉电空眼听远师元请容她军士百办语期北林识半夫客战院城候单音台死视领失司亲始极双令改功程爱德复切随李员离轻观青足落叫根怎持精送众影八首包准兴红达早尽故房引火站似找备调断设格消拉照布友整术石展紧据终周式举飞片虽易运笑云建谈界务写钱商乐推注越千微若约英集示呢待坐议乎留称品志黑存六造低江念产刻节尔吃势依图共曾响底装具喜严九况跟罗须显热病证刚治绝群市阳确究久除闻答段官政类黄武七支费父统"
+                for (const item of str) {
+                    scoreMap.set(item, 0)
+                }
+            }
+            console.log("loadFromLoacl scoreMap2 size " + scoreMap.size)
+        }
+
+        // 开始新的练习组
+        function startNewExercise() {
+            generateNewExercise();
+            updateStats();
+            renderWords();
+            startExercise();
+        }
+
+        // 生成新的练习字词
+        function generateNewExercise() {
+            currentExercise = [];
+            wordBank.length = 0
+            // console.log("generateNewExercise errorSet size " + errorSet.size)
+            if (errorSet.size > 0) {
+                for (const item of errorSet.values()) {
+                    for (let i = 0; i < pealtyRepeat; i++) {
+                        currentExercise.push(item)
+                    }
+                    insertList.push(item)
+                }
+                errorSet.clear()
+                inError = true
+                lastIsInError = true
+                console.log("generateNewExercise1 " + currentExercise)
+                return
+            } else {
+                inError = false
+            }
+            // 预选20个字
+            let selectList = []
+            let diffCount = 0
+            while (true) {
+                scoreMap.forEach((v, k) => {
+                    //console.log("== k " + k + " v " + v + " currentTarget " + currentTarget)
+                    if (v < currentTarget && selectList.length < 30) {
+                        diffCount += currentTarget - v
+                        if (!selectList.includes(k)) {
+                            selectList.push(k)
+                        }
+                    }
+                });
+
+                if ((selectList.length < 10 && scoreMap.size > 10) || diffCount < 20) {
+                    currentTarget *= 2
+                    // 这时候需要把后面还没有练习的字放到最前面
+                    let newMap = new Map()
+                    for (const zi of selectList) {
+                        newMap.set(zi, scoreMap.get(zi))
+                    }
+                    scoreMap.forEach((v, k) => {
+                        newMap.set(k, v)
+                    })
+                    scoreMap = newMap
+                }
+                if (selectList.length > 0) {
+                    break
+                }
+            }
+
+            // console.log("selectSet " + selectSet.size)
+
+            // console.log("selectList " + selectList)
+
+            let list = []
+            while (list.length < 10 && selectList.length > 0) {
+                const randomIndex = Math.floor(Math.random() * selectList.length);
+                list.push(selectList.splice(randomIndex, 1)[0])
+            }
+            console.log("list " + list + " selectList " + selectList)
+
+            for (const item of insertList) {
+                const randomIndex = (Math.floor(Math.random() * list.length)) % 3;
+                list.splice(randomIndex, 0, item)
+            }
+
+            let randomSet = new Set()
+            for (const item of list) {
+                randomSet.add(item)
+            }
+
+            const count = exerciseConfig.wordsPerGroup;
+            console.log("1")
+            for (const item of randomSet.values()) {
+                if (currentExercise.length > count) {
+                    break
+                }
+                currentExercise.push(item)
+            }
+            console.log("2")
+
+            // for (let i = 0; i < count; i++) {
+            //     currentExercise.push(list[0]);
+            //     list.splice(0, 1)
+            // }
+            wordBank.length = 0
+            console.log("generateNewExercise2 " + currentExercise)
+        }
+
+        // 渲染字词和输入框
+        function renderWords() {
+            wordsContainerEl.innerHTML = '';
+            // 获取屏幕宽度的一半
+            const screenHalfWidth = window.innerWidth / 2;
+            currentExercise.forEach((word, index) => {
+                // 创建字词容器
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.id = `word-item-${index}`;
+
+                // 创建得分显示（在word-text正上方）
+                const wordScore = document.createElement('div');
+                wordScore.className = 'word-score';
+                wordScore.id = `word-score-${index}`;
+                // 获取当前得分
+                const score = scoreMap.get(word) || 0;
+                wordScore.textContent = `${score}`;
+                wordItem.appendChild(wordScore);
+
+                // 创建字词文本
+                const wordText = document.createElement('div');
+                wordText.className = 'word-text';
+                wordText.textContent = word;
+                wordItem.appendChild(wordText);
+
+                // 创建输入框
+                const wordInput = document.createElement('input');
+                wordInput.type = 'text';
+                wordInput.className = 'word-input pending';
+                wordInput.id = `word-input-${index}`;
+                wordInput.dataset.index = index;
+                wordInput.dataset.word = word;
+
+                // 设置输入框宽度（根据字词长度）
+                const wordLength = word.length;
+                const minWidth = 60;
+                const width = Math.max(minWidth, wordLength * 30 + 10);
+                wordInput.style.width = `${width}px`;
+
+                // 根据宽度决定对齐方式
+                if (width > screenHalfWidth) {
+                    wordInput.classList.add('left-align');
+                }
+
+                // 添加事件监听
+                wordInput.addEventListener('input', handleInput);
+                wordInput.addEventListener('keydown', handleKeyDown);
+                wordInput.addEventListener('compositionstart', () => {
+                    // console.log("compositionstart")
+                    isComposition = true;
+                });
+                wordInput.addEventListener('compositionend', () => {
+                    // console.log("compositionend")
+                    isComposition = false;
+                });
+
+                // 焦点事件监听
+                wordInput.addEventListener('focus', () => {
+                    // 禁止手动选择输入框，只能顺序输入
+
+                    if (index !== currentIndex && !modalOverlay.classList.contains('active')) {
+                        wordInput.blur();
+                        const currentInput = document.getElementById(`word-input-${currentIndex}`);
+                        if (currentInput) currentInput.focus();
+                    }
+                });
+
+                // 失去焦点时检查
+                wordInput.addEventListener('blur', () => {
+                    if (index === currentIndex && isActive && !modalOverlay.classList.contains('active')) {
+                        setTimeout(() => {
+                            const currentInput = document.getElementById(`word-input-${currentIndex}`);
+                            if (currentInput && document.activeElement !== currentInput) {
+                                currentInput.focus();
+                            }
+                        }, 10);
+                    }
+                });
+
+                wordItem.appendChild(wordInput);
+                wordsContainerEl.appendChild(wordItem);
+            });
+        }
+
+        // 更新得分显示
+        function updateWordScore(word) {
+            const score = scoreMap.get(word) || 0;
+            // 找到所有包含这个词的元素并更新
+            const wordItems = document.querySelectorAll('.word-item');
+            wordItems.forEach(item => {
+                const wordText = item.querySelector('.word-text');
+                if (wordText && wordText.textContent === word) {
+                    const scoreEl = item.querySelector('.word-score');
+                    if (scoreEl) {
+                        scoreEl.textContent = `${score}`;
+                    }
+                }
+            });
+        }
+
+        // 开始练习
+        function startExercise() {
+            isActive = true;
+            currentIndex = 0;
+            // completedCount = 0;
+            hasErrorInCurrentInput = false;
+
+            // 启用第一个输入框
+            const firstInput = document.getElementById('word-input-0');
+            if (firstInput) {
+                firstInput.disabled = false;
+                firstInput.className = 'word-input current';
+                firstInput.focus();
+                firstInput.value = '';
+            }
+
+            // 禁用所有其他输入框
+            for (let i = 1; i < currentExercise.length; i++) {
+                const inputEl = document.getElementById(`word-input-${i}`);
+                if (inputEl) {
+                    inputEl.disabled = true;
+                    inputEl.className = 'word-input pending';
+                    inputEl.value = '';
+                }
+            }
+
+            updateStats();
+        }
+
+        // 处理输入事件
+        function handleInput(e) {
+            if (!isActive) return;
+            const inputEl = e.target;
+            const index = parseInt(inputEl.dataset.index);
+            const value = inputEl.value;
+
+            if (index !== currentIndex) return;
+
+            // 如果当前输入已经错误，保持红色样式
+            if (hasErrorInCurrentInput) {
+                inputEl.className = 'word-input incorrect';
+            }
+
+            // 如果不是输入法组合状态，立即检查
+            setTimeout(() => {
+                if (!isComposition) {
+                    checkWord(index, value)
+                }
+            }, 10);
+        }
+
+        // 处理按键事件
+        function handleKeyDown(e) {
+            if (!isActive) return;
+            // console.info("key " + e.code + "  " +  Date.now())
+            const inputEl = e.target;
+            const index = parseInt(inputEl.dataset.index);
+
+            if (index !== currentIndex) return;
+
+            // 删除键按下 - 立即判定为错误
+            if ((e.code === 'Backspace' || e.code === 'Delete') && inputEl.value.length > 0) {
+                inputEl.className = 'word-input incorrect';
+                errorCount++;
+                checkWord(index, inputEl.value, true);
+                hasErrorInCurrentInput = true;
+                updateStats();
+                //e.preventDefault();
+                return;
+            }
+
+            // 空格键按下 - 提交当前字词
+            if (e.key === ' ') {
+                //e.preventDefault();
+                setTimeout(() => {
+                    checkWord(index, inputEl.value, true, true);
+                    if (inputEl.value.trim().length != inputEl.value.length) {
+                        inputEl.value = inputEl.value.trim()
+                    }
+                })
+            }
+        }
+
+        // 检查字词
+        function checkWord(index, value, forceCheck = false, space = false) {
+            if (!isActive || index !== currentIndex) return;
+
+            const inputEl = document.getElementById(`word-input-${index}`);
+            const word = currentExercise[index];
+            //console.info("word " + word + " value " + value + " hasErrorInCurrentInput " + hasErrorInCurrentInput)
+            if (space && value.trim() === '$$$') {
+                errorSet.delete(word)
+                if (scoreMap.size > 1) {
+                    scoreMap.delete(word)
+                    saveConfig()
+                }
+                moveToNextInput();
+                return;
+            }
+
+            // 如果已经错误，保持红色
+            if (hasErrorInCurrentInput) {
+                inputEl.className = 'word-input incorrect';
+
+                // 检查是否现在输入正确了
+                if (value === word || (forceCheck && value.trim() === word)) {
+                    // 输入正确，划掉字并跳转
+                    inputEl.className = 'word-input incorrect';
+                    inputEl.disabled = true;
+                    inputEl.value = word;
+
+                    // completedCount++;
+                    moveToNextInput();
+                }
+                // console.log("000")
+                return;
+            }
+
+            // 正常检查
+            if (value === word || (forceCheck && value.trim() === word)) {
+                // 输入正确
+                inputEl.className = 'word-input correct';
+                inputEl.disabled = true;
+                inputEl.value = word;
+
+                // completedCount++;
+                moveToNextInput();
+                updateScore(word, true)
+                // 更新得分显示
+                updateWordScore(word);
+                // console.log("111")
+            } else if (value.length > 0) {
+                // 输入有内容但不正确
+                hasErrorInCurrentInput = true;
+                errorCount++;
+                inputEl.className = 'word-input incorrect';
+                updateScore(word, false)
+                // 更新得分显示
+                updateWordScore(word);
+                // console.log("222")
+            }
+            updateStats();
+        }
+
+        // 移动到下一个输入框
+        function moveToNextInput() {
+            hasErrorInCurrentInput = false;
+
+            // 禁用当前输入框
+            const currentInput = document.getElementById(`word-input-${currentIndex}`);
+            if (currentInput) {
+                currentInput.disabled = true;
+            }
+
+            // 更新索引
+            currentIndex++;
+
+            // 如果还有下一个输入框
+            if (currentIndex < currentExercise.length) {
+                const nextInput = document.getElementById(`word-input-${currentIndex}`);
+                if (nextInput) {
+                    nextInput.disabled = false;
+                    nextInput.className = 'word-input current';
+                    nextInput.focus();
+                    nextInput.value = '';
+                    updateStats();
+                }
+            } else {
+                // 所有字词都已完成
+                completeCurrentGroup();
+            }
+        }
+
+        // 重置当前组
+        function resetCurrentGroup() {
+            // 重置所有输入框
+            for (let i = 0; i < currentExercise.length; i++) {
+                const inputEl = document.getElementById(`word-input-${i}`);
+                if (inputEl) {
+                    inputEl.value = '';
+                    inputEl.className = i === 0 ? 'word-input current' : 'word-input pending';
+                    inputEl.disabled = i !== 0;
+                }
+            }
+
+            // 重置状态
+            currentIndex = 0;
+            completedCount = 0;
+            hasErrorInCurrentInput = false;
+            errorSet.clear()
+            currentTarget = 1 * baseTarget
+            for (let [key] of scoreMap) {
+                scoreMap.set(key, 0);
+            }
+            inError = false
+            insertList.length = 0
+
+            // 更新所有得分显示
+            currentExercise.forEach(word => {
+                updateWordScore(word);
+            });
+
+            // 聚焦到第一个输入框
+            const firstInput = document.getElementById('word-input-0');
+            if (firstInput) {
+                firstInput.focus();
+            }
+
+            updateStats();
+        }
+
+        // 完成当前组
+        function completeCurrentGroup() {
+            isActive = false;
+
+            // 短暂延迟后自动开始下一组
+            getNext();
+        }
+
+        // =============== 对外接口 ===============
+
+        // 获取下一组练习
+        function getNext() {
+            groupCount++;
+            startNewExercise();
+            updateStats();
+        }
+
+        // 获取当前统计数据
+        function getStats() {
+            return {
+                completed: completedCount,
+                total: currentExercise.length,
+                groupCount: groupCount,
+                errorCount: errorCount
+            };
+        }
+
+        // 设置字词库
+        function setWordBank(newWordBank) {
+            wordBank.length = 0;
+            // wordBank.push(...newWordBank);
+            scoreMap.clear()
+            for (const item of newWordBank) {
+                scoreMap.set(item, 0)
+            }
+            currentTarget = baseTarget
+        }
+
+        // =============== 辅助函数 ===============
+
+        // 更新统计数据
+        function updateStats() {
+            let count = 0
+            scoreMap.forEach((v, k) => {
+                count += v
+            });
+            // console.log("size " + scoreMap.size + " count " + count + " currentTarget " + currentTarget)
+            const progress = (scoreMap.size > 0 ? count / (scoreMap.size * currentTarget) : 0) * 100;
+
+            // 格式化为百分比
+            const percentage = Math.min(100, Math.max(0, progress));
+            completedEl.textContent = `${percentage.toFixed(1)}%`;
+            groupCountEl.textContent = currentTarget;
+            // errorCountEl.textContent = errorCount;
+        }
+
+        function updateScore(item, right) {
+            console.log("inError " + inError + " lastIsInError " + lastIsInError);
+            if (right) {
+                if (!inError && !lastIsInError) {
+                    scoreMap.set(item, scoreMap.get(item) + 1)
+                    // console.log("updateScore1 " + item + "  " + scoreMap.get(item));
+                    completedCount++
+                }
+            } else {
+                if (!inError && !lastIsInError) {
+                    let score = scoreMap.get(item) - penalty
+                    if (score < 0) {
+                        score = 0
+                    }
+                    let diff = scoreMap.get(item) - score
+                    completedCount -= diff
+                    scoreMap.set(item, score)
+                    // console.log("updateScore2 " + item + "  " + scoreMap.get(item));
+                }
+
+                errorSet.add(item)
+            }
+            if (!inError && lastIsInError) {
+                lastIsInError = false
+            }
+            saveConfig()
+        }
+
+        function saveConfig() {
+            // console.log("saveConfig")
+            const data = {
+                scoreMap: Array.from(scoreMap.entries()),
+                currentTarget,
+                errorSet: Array.from(errorSet),
+            };
+            localStorage.setItem('typingData', JSON.stringify(data));
+        }
+
+        function loadConfig() {
+            const dataStr = localStorage.getItem('typingData');
+            if (!dataStr) return null;
+
+            try {
+                const data = JSON.parse(dataStr);
+                return {
+                    scoreMap: new Map(data.scoreMap || []),
+                    currentTarget: data.currentTarget || 5,
+                    errorSet: new Set(data.errorSet || [])
+                };
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                return null;
+            }
+        }
+
+        function clearConfig() {
+            localStorage.removeItem('typingData');
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
