@@ -10,13 +10,6 @@ fn try_swap_optimized(
     let k1 = assignment[r1];
     let k2 = assignment[r2];
     
-    // 快速过滤
-    if k1 == k2 || 
-       !ctx.dynamic_groups[r1].contains_key(k2) || 
-       !ctx.dynamic_groups[r2].contains_key(k1) {
-        return false;
-    }
-
     // 缓存当前状态以便快速回滚
     let old_score = self.get_score(ctx);
     
